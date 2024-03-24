@@ -25,7 +25,7 @@ func main() {
 	//user := userOrm.GetById(0)
 	beatService := new(rpcs.HeartbeatService)
 	rpc.Register(beatService)
-	listener, err := net.Listen("tcp", ":1234")
+	listener, err := net.Listen("tcp", ":16116")
 	if err != nil {
 		log.Fatal("ListenTCP error:", err)
 	}

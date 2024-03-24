@@ -13,7 +13,7 @@ func main() {
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
-	client, err := rpc.Dial("tcp", "localhost:1234")
+	client, err := rpc.Dial("tcp", "localhost:16116")
 	if err != nil {
 		log.Fatal("Dialing:", err)
 	}
