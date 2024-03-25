@@ -5,7 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"llm_training_management_system/internal/orm"
+	"llm_training_management_system/pkg/dataset"
 	"llm_training_management_system/pkg/ltms_config"
+	"llm_training_management_system/pkg/slaves"
 	"llm_training_management_system/rpcs"
 	"log"
 	"net"
@@ -55,8 +57,8 @@ func ResponseMiddleware() gin.HandlerFunc {
 
 }
 
-func startHttpServer(config ltms_config.HttpConfig) {
-	r := setupRouter()
+func startHttpServer(config *ltms_config.HttpConfig) {
+	r := setupRouter(config)
 	// Listen and Server in 0.0.0.0:9080
 	httpServerError := r.Run(fmt.Sprintf("%s:%d", config.HOST, config.PORT))
 	if httpServerError != nil {
@@ -66,20 +68,24 @@ func startHttpServer(config ltms_config.HttpConfig) {
 	log.Println("HTTP服务启动成功，监听端口:", "9080")
 }
 
-func setupRouter() *gin.Engine {
+func setupRouter(config *ltms_config.HttpConfig) *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
+	r.MaxMultipartMemory = 5 << 10 << 10 << 10 // 5 GiB(每左移10位表示*1024）
 	r.Use(ResponseMiddleware())
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
 		c.Set("resp", "pong")
 	})
 
+	dataset.BindRouter(config, r)
+	slaves.BindRouter(config, r)
+
 	return r
 }
 
-func startRPCServer(config ltms_config.RpcConfig) {
+func startRPCServer(config *ltms_config.RpcConfig) {
 	beatService := new(rpcs.HeartbeatService)
 	rpc.Register(beatService)
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.HOST, config.PORT))
@@ -104,7 +110,7 @@ func main() {
 	userOrm = orm.NewUserOrm(db)
 
 	// 启动RPC服务
-	go startRPCServer(rpcConfig)
+	go startRPCServer(&rpcConfig)
 	// 启动HTTP服务
-	startHttpServer(httpConfig)
+	startHttpServer(&httpConfig)
 }

@@ -20,8 +20,9 @@ type RpcConfig struct {
 }
 
 type HttpConfig struct {
-	HOST string
-	PORT int
+	HOST    string
+	PORT    int
+	DataDir string
 }
 
 func ReadConfig() (MysqlConfig, RpcConfig, HttpConfig) {
@@ -38,6 +39,7 @@ func ReadConfig() (MysqlConfig, RpcConfig, HttpConfig) {
 
 	viper.SetDefault("HTTP_SERVER_HOST", "0.0.0.0")
 	viper.SetDefault("HTTP_SERVER_PORT", 9582)
+	viper.SetDefault("HTTP_SERVER_DATA_DIR", "./")
 	// 读取环境变量（如果.env文件中不存在该变量）
 	viper.AutomaticEnv()
 	// 读取.env文件，如果文件不存在则忽略错误
@@ -58,8 +60,9 @@ func ReadConfig() (MysqlConfig, RpcConfig, HttpConfig) {
 	}
 
 	httpConfig := HttpConfig{
-		HOST: viper.GetString("HTTP_SERVER_HOST"),
-		PORT: viper.GetInt("HTTP_SERVER_PORT"),
+		HOST:    viper.GetString("HTTP_SERVER_HOST"),
+		PORT:    viper.GetInt("HTTP_SERVER_PORT"),
+		DataDir: viper.GetString("HTTP_SERVER_DATA_DIR"),
 	}
 
 	log.Println(viper.AllSettings())
