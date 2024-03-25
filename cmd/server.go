@@ -1,41 +1,110 @@
 package main
 
 import (
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"llm_training_management_system/internal/orm"
+	"llm_training_management_system/pkg/ltms_config"
 	"llm_training_management_system/rpcs"
 	"log"
 	"net"
+	"net/http"
 	"net/rpc"
 )
 
 var db *gorm.DB
 var userOrm *orm.UserOrm
 
-func main() {
-	db = orm.InitDB()
-	userOrm = orm.NewUserOrm(db)
-	//user, err := userOrm.GetByUsername("admin")
-	//if err != nil {
-	//	log.Println("ssssss")
-	//	log.Println(err)
-	//}
-	//log.Println(user)
-	//userOrm.Create(&orm.User{Username: "admin", Password: "admin"})
-	//user := userOrm.GetById(0)
+type HttpResponse struct {
+	Message string      `json:"message"`
+	Code    int         `json:"code"`
+	Result  string      `json:"result"`
+	Data    interface{} `json:"data"`
+}
+
+var ErrorResponse = HttpResponse{"服务异常，请重试", 500, "", nil}
+
+func ResponseMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next() // 执行后续的处理函数
+
+		// 从 gin.Context 中获取设置的响应数据
+		err, exists := c.Get("err")
+		if exists && err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse)
+			log.Printf("出现错误,err=%s\n", err)
+			return
+		}
+
+		resp, _ := c.Get("resp")
+		data, _ := c.Get("data")
+
+		var respStr string
+		if resp != nil {
+			respStr = resp.(string)
+		}
+		// 设置统一的 JSON 响应格式
+		c.JSON(http.StatusOK, HttpResponse{
+			Code:    http.StatusOK,
+			Message: "",
+			Result:  respStr,
+			Data:    data,
+		})
+	}
+
+}
+
+func startHttpServer(config ltms_config.HttpConfig) {
+	r := setupRouter()
+	// Listen and Server in 0.0.0.0:9080
+	httpServerError := r.Run(fmt.Sprintf("%s:%d", config.HOST, config.PORT))
+	if httpServerError != nil {
+		log.Fatalf("服务启动失败，err=%s\n", httpServerError)
+		return
+	}
+	log.Println("HTTP服务启动成功，监听端口:", "9080")
+}
+
+func setupRouter() *gin.Engine {
+	// Disable Console Color
+	// gin.DisableConsoleColor()
+	r := gin.Default()
+	r.Use(ResponseMiddleware())
+	// Ping test
+	r.GET("/ping", func(c *gin.Context) {
+		c.Set("resp", "pong")
+	})
+
+	return r
+}
+
+func startRPCServer(config ltms_config.RpcConfig) {
 	beatService := new(rpcs.HeartbeatService)
 	rpc.Register(beatService)
-	listener, err := net.Listen("tcp", ":16116")
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.HOST, config.PORT))
 	if err != nil {
 		log.Fatal("ListenTCP error:", err)
 	}
 
-	log.Println("Server is running")
+	log.Println("RPC is running")
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatal("Accept error:", err)
+			log.Println("Accept error:", err)
 		}
 		go rpc.ServeConn(conn)
 	}
+}
+
+func main() {
+	config, rpcConfig, httpConfig := ltms_config.ReadConfig()
+
+	db = orm.InitDB(config)
+	userOrm = orm.NewUserOrm(db)
+
+	// 启动RPC服务
+	go startRPCServer(rpcConfig)
+	// 启动HTTP服务
+	startHttpServer(httpConfig)
 }
