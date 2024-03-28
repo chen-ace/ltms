@@ -10,7 +10,6 @@ import (
 
 func main() {
 	// 获取GPU信息
-	gpuInfo, _ := gpu.GetNvidiaInfo()
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
@@ -19,15 +18,24 @@ func main() {
 		log.Fatal("Dialing:", err)
 	}
 
-	request := &rpcs.Request{Message: "Ping", GpuInfo: gpuInfo, NodeId: "node1"}
-	response := new(rpcs.Response)
+	go SendHeartBeat(err, client)
 
+}
+
+func handleOrder() {
+
+}
+
+func SendHeartBeat(err error, client *rpc.Client) {
 	for {
+		gpuInfo, _ := gpu.GetNvidiaInfo()
+		request := &rpcs.Request{Message: "Ping", GpuInfo: gpuInfo, NodeId: "node1"}
+		response := new(rpcs.Response)
 		err = client.Call("HeartbeatService.Beat", request, response)
 		if err != nil {
 			log.Println("Call error:", err)
 		}
+		time.Sleep(5 * time.Second) // 每5s发送一次心跳
 		log.Printf("Server response: %s", response.Message)
-		time.Sleep(5 * time.Second) // 每分钟发送一次心跳
 	}
 }

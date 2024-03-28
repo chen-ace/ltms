@@ -2,6 +2,7 @@ package slaves
 
 import (
 	"llm_training_management_system/pkg/gpu"
+	"llm_training_management_system/rpcs"
 	"time"
 )
 
@@ -11,7 +12,11 @@ type SlaveNode struct {
 	LastHeartBeat time.Time
 }
 
+type taskElement struct {
+}
+
 var slaves = make(map[string]SlaveNode)
+var tasks = make(map[string][]*rpcs.LLMOrder)
 
 func HeartBeat(nodeId string, gpu *gpu.GPUInfo) {
 	node := SlaveNode{
@@ -28,4 +33,8 @@ func ListAllSlaves() []SlaveNode {
 		values = append(values, node)
 	}
 	return values
+}
+
+func PushLLMOrder(nodeId string, order *rpcs.LLMOrder) {
+	tasks[nodeId] = append(tasks[nodeId], order)
 }
