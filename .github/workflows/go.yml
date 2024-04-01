@@ -40,5 +40,5 @@ jobs:
         run: |
           echo "Starting Service..."
           ssh -i ~/.ssh/id_rsa -p ${{secrets.PORT }} root@${{secrets.HOST }} "cd ${{secrets.HOME_DIR }}/ltms/build \
-            && systemctl is-active --quiet ltmsd && systemctl stop ltmsd ;echo 'Service Stopped'; systemctl disable ltmsd && ./ltmsd uninstall; \
+            && systemctl is-active --quiet ltmsd && systemctl stop ltmsd ;echo 'Service Stopped'; systemctl disable ltmsd && ./ltmsd uninstall;echo 'Service Uninstalled' \
             ./ltmsd install && ./ltmsd start && systemctl enable ltmsd && systemctl status ltmsd"
