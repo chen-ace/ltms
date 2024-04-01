@@ -1,0 +1,44 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{secrets.PORT }} ${{secrets.HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_rsa -p ${{secrets.PORT }} root@${{secrets.HOST }} "echo 'REMOTE IS READY'"
+
+      - name: Build
+        run: |
+          echo "Starting copy to remote ..."
+          tar -czvf ltms.tar.gz .env *
+          scp -P ${{secrets.PORT }} ltms.tar.gz root@${{secrets.HOST }}:${{secrets.HOME_DIR }}
+          ssh -i ~/.ssh/id_rsa -p ${{secrets.PORT }} root@${{secrets.HOST }} "cd ${{secrets.HOME_DIR }} && rm -rf ltms && mkdir ltms  && tar -xzf ltms.tar.gz -C ${{secrets.HOME_DIR }}/ltms "
+
+      - name: Deploy to server
+        run: |
+          echo "Starting deployment..."
+          echo "Starting Stop Service..."
+          ssh -i ~/.ssh/id_rsa -p ${{secrets.PORT }} root@${{secrets.HOST }} "source ~/.profile && cd ${{secrets.HOME_DIR }}/ltms && make"
+
+      - name: Start Service
+        run: |
+          echo "Starting Service..."
+          ssh -i ~/.ssh/id_rsa -p ${{secrets.PORT }} root@${{secrets.HOST }} "cd ${{secrets.HOME_DIR }}/ltms/build \
+            && systemctl is-active --quiet ltmsd && systemctl stop ltmsd ;echo 'Service Stopped'; systemctl disable ltmsd && ./ltmsd uninstall; \
+            ./ltmsd install && ./ltmsd start && systemctl enable ltmsd && systemctl status ltmsd"
