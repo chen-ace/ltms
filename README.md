@@ -1,5 +1,7 @@
 # LTMS: LLM Training Management System
 
+[![Go](https://github.com/chen-ace/ltms/actions/workflows/go.yml/badge.svg)](https://github.com/chen-ace/ltms/actions/workflows/go.yml)
+
 ## 简介
 
 LTMS 是一个开源项目，旨在为大型语言模型训练提供集群管理解决方案。它支持训练集群的管理、集群状态监控、训练数据集的管理以及训练任务的提交和调度。
@@ -23,6 +25,15 @@ LTMS 是一个开源项目，旨在为大型语言模型训练提供集群管理
    make
     ```
 3. 构建结果将在 `build` 文件夹中生成两个文件：`ltmsd` (服务端) 和 `ltms` (客户端)。
+
+## 服务端配置
+
+配置可以参考项目中的 `server_config.yaml`和`client_config.yaml` 文件。程序在启动时会按照以下顺序寻找该配置文件：
+
+1. 程序所在的目录
+2. `/etc/ltms`
+
+请确保在这些位置之一有有效的配置文件，以便程序能够正确运行。
 
 ## 文档
 

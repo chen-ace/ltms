@@ -6,7 +6,7 @@ LDFLAGS := -s -w
 # Binary names
 SERVER_BINARY := ltmsd
 CLIENT_BINARY := ltmsclient
-ENV_FILE := .env
+SERVER_CONFIG_FILE := server_config.yaml
 
 # Source files
 SERVER_SOURCE := ./cmd/ltmsd/server.go
@@ -30,7 +30,7 @@ all: build_server build_client
 build_server:
 	@echo "Building server..."
 	@go build -trimpath -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(SERVER_BINARY) $(SERVER_SOURCE)
-	@cp $(ENV_SOURCE) $(BUILD_DIR)/$(ENV_FILE)
+	@cp $(SERVER_CONFIG_FILE) $(BUILD_DIR)/$(SERVER_CONFIG_FILE)
 	@chmod +x $(BUILD_DIR)/$(SERVER_BINARY)
 
 # Build client
