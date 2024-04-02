@@ -26,6 +26,31 @@ LTMS 是一个开源项目，旨在为大型语言模型训练提供集群管理
     ```
 3. 构建结果将在 `build` 文件夹中生成两个文件：`ltmsd` (服务端) 和 `ltms` (客户端)。
 
+## 安装与卸载系统服务
+
+你可以使用以下命令将 `ltmsd` 安装为系统服务：
+
+```bash
+./ltmsd install
+```
+如果你想卸载该服务，可以使用以下命令：
+```bash
+./ltmsd uninstall
+```
+如果你不想安装为系统服务，你也可以直接启动 ltmsd：
+```bash
+./ltmsd
+```
+
+## 管理系统服务
+
+安装服务后，你可以使用 `systemctl` 命令来启动、停止或查看服务状态。例如：
+```bash
+sudo systemctl start ltmsd  #启动服务
+sudo systemctl stop ltmsd   #停止服务
+sudo systemctl status ltmsd #查看服务状态
+journalctl -f -u ltmsd      #查看日志
+```
 ## 服务端配置
 
 配置可以参考项目中的 `server_config.yaml`和`client_config.yaml` 文件。程序在启动时会按照以下顺序寻找该配置文件：
