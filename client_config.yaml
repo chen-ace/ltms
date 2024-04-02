@@ -1,0 +1,5 @@
+client:
+  master_host: localhost
+  master_port: 9332
+  node_id: node1
+  node_rank: 0

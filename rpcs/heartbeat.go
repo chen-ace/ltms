@@ -12,9 +12,10 @@ type HeartbeatService struct{}
 
 // Request 是心跳请求的结构体。
 type Request struct {
-	Message string
-	GpuInfo gpu.GPUInfo
-	NodeId  string
+	Message  string
+	GpuInfo  gpu.GPUInfo
+	NodeId   string
+	NodeRank int
 }
 
 // Response 是心跳响应的结构体。

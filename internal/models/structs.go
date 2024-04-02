@@ -1,6 +1,7 @@
 package models
 
 type LLMOrder struct {
-	Name string
-	Args []string
+	Name     string
+	Args     []string
+	Parallel bool
 }
