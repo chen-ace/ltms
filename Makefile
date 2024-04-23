@@ -21,7 +21,7 @@ OS := $(shell uname -s | tr A-Z a-z)
 ARCH := $(shell uname -m)
 
 # Tarball name with OS and architecture information
-TARBALL := project-$(OS)-$(ARCH).tar.gz
+TARBALL := ltms-$(OS)-$(ARCH).tar.gz
 
 # Default target
 all: build_server build_client
