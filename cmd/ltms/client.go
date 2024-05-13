@@ -20,18 +20,21 @@ var r router.Router
 
 func main() {
 	clientConfig = ltms_config.ReadClientConfig()
+	log.Println("Client config:", clientConfig, "\n start connect to master server...")
 	client, err := rpc.Dial("tcp", fmt.Sprintf("%s:%d", clientConfig.MasterHost, clientConfig.MasterPort))
 	if err != nil {
 		log.Fatal("Dialing:", err)
 	}
-
+	log.Println("Connected to master server.")
 	// 注册RPC命令
-	r = router.Router{}
+	log.Println("Registering RPC commands...")
+	r = router.NewRouter()
 	r.Register("Hello", handleHello)
 	r.Register("Echo", handleEcho)
-
+	// 发送心跳
+	log.Println("Started client.")
 	go SendHeartBeat(err, client)
-
+	select {}
 }
 
 // handleHello 处理服务端返回的Hello命令
@@ -70,6 +73,10 @@ func executeShellCommand(name string, args []string) (string, error) {
 // handleOrder 处理服务端返回的命令
 func handleOrder(orders *[]models.LLMOrder) (string, error) {
 	// 从服务器获取命令
+	if orders == nil {
+		log.Println("No orders received from master.")
+		return "", nil
+	}
 	// 执行命令
 	for _, order := range *orders {
 		if order.IsShell {
@@ -99,6 +106,7 @@ func handleOrder(orders *[]models.LLMOrder) (string, error) {
 
 func SendHeartBeat(err error, client *rpc.Client) {
 	for {
+		log.Println("Sending heartbeat...")
 		gpuInfo, _ := gpu.GetNvidiaInfo()
 		request := &rpcs.Request{Message: "Ping",
 			GpuInfo:  gpuInfo,

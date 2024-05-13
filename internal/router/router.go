@@ -7,10 +7,14 @@ type Router struct {
 }
 
 type Request struct {
-	data map[string]interface{}
+	Data map[string]interface{}
 }
 
 type Response = Request
+
+func NewRouter() Router {
+	return Router{tree: art.New()}
+}
 
 func (r Router) Call(path string, request Request) (Response, bool) {
 	if handler, found := r.tree.Search(art.Key(path)); found {
@@ -25,9 +29,9 @@ func (r Router) Register(path string, handler func(Request) Response) {
 }
 
 func (req Request) Get(key string) interface{} {
-	return req.data[key]
+	return req.Data[key]
 }
 
 func (req Request) Set(key string, value interface{}) {
-	req.data[key] = value
+	req.Data[key] = value
 }
